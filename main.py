@@ -18,7 +18,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 #%%
 if __name__ == "__main__":
-    conf = Configurator("NeuRec.properties", default_section="hyperparameters")
+    conf = Configurator("./util_esun/NeuRec.properties", default_section="hyperparameters")
     gpu_id = str(conf["gpu_id"])
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
 
@@ -61,20 +61,22 @@ if __name__ == "__main__":
     recommendation = {}
     with tqdm(total=len(to_cust_no)) as pbar:
         for k, v in to_cust_no.items():
-            pred_r = model.predict(k)
+            pred_r = model.predict(k, None)
             top_5_item_id = bn.argpartition(-pred_r, 5)[:5]
             top_5_wm_prod_code = []
             for i in range(len(top_5_item_id)):
                 top_5_wm_prod_code.append(to_wm_prod_code[top_5_item_id[i]])
-            recommendation[v] = top_5_item_id
+            recommendation[v] = top_5_wm_prod_code
             pbar.update(1)
         
 #%%
 # evaluate
 if __name__ == "__main__":
-    print('evaluating...')
+    # print('evaluating...')
     evaluation = Evaluation('', './dataset_esun/2019-06-30/interaction_eval.csv', recommendation)
     score_all = evaluation.results()
-    print("===", score_all)
+    # print("===", score_all)
+    msg = "score: " + str(round(score_all, 4))
+    model.logger.info(msg)
 
 #%%
